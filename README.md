@@ -4,6 +4,7 @@ Python implementation of the following paper:
 https://arxiv.org/pdf/1510.04342.pdf
 
 Usage:
+```
 from sklearn.datasets import make_regression
 n_samples = 2000
 X, y = make_regression(n_samples=n_samples)
@@ -20,3 +21,4 @@ a.fit(X, 'target', 'w', index_cols=['index1'], min_samples_leaf=10, n_estimators
       n_threads=1, full_predictor=True).mean(axis=1).mean()
       
 a.plot_results(X)
+```
