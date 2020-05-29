@@ -325,7 +325,7 @@ class CausalForest(object):
         # removing w from df, if necessary
         if not self.use_w_in_tree:
             for col in self.w_var:
-                if col in df.columns:
+                if col in self.columns:
                     index_cols += [col]
                     
         final_cols = [x for x in self.columns if x not in index_cols and x not in self.y_var]
@@ -335,7 +335,7 @@ class CausalForest(object):
         imp.columns = ['importance']
         imp['var'] = final_cols
         
-        return imp.sort_values('importancia', ascending=False)
+        return imp.sort_values('importance', ascending=False)
     
     
     def plot_results(self, df):
@@ -393,7 +393,7 @@ class CausalForest(object):
         
     def plot_histogram(self, df):
         """
-        function that plots a simple histogram fo the effects
+        function that plots a simple histogram for the effects
         """
         preds = self.predict(df)
         plt.hist(preds)
