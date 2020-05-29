@@ -397,3 +397,4 @@ class CausalForest(object):
         """
         preds = self.predict(df)
         plt.hist(preds)
+        plt.show()
