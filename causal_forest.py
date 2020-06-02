@@ -187,7 +187,6 @@ class CausalForest(object):
             self.propensity_score[tree_index] = {int(x['leaf']): x['difference'] for index, x in leaves.iterrows()}
             return model
         for indes, row in leaves.iterrows():
-            print(row['difference'])
             model.tree_.value[int(row['leaf'])] = row['difference']
         return model
             
@@ -361,7 +360,7 @@ class CausalForest(object):
             score = x['prediction'].mean()
             
             # thresholds
-            up, down = compute_mean_diff(x)
+            down, up = compute_mean_diff(x)
             
             # class proportion
             pr_treatment = x[self.w_var[0]].mean()
@@ -379,7 +378,7 @@ class CausalForest(object):
         resp = res.groupby('bin').apply(aggregator)
         resp['lift'] = resp['tau'] / resp['tau'].mean()
         
-        bp_list = [(row['lower']*100, row['tau'], row['upper']) for _, row in resp.iterrows()]
+        bp_list = [(row['lower'], row['tau'], row['upper']) for _, row in resp.iterrows()]
         
         fig = plt.figure(figsize=(10, 8))
         plt.boxplot(bp_list)
@@ -391,10 +390,12 @@ class CausalForest(object):
         plt.grid()
         plt.show()
         
+        return res
+        
     def plot_histogram(self, df):
         """
         function that plots a simple histogram for the effects
         """
-        preds = self.predict(df)
+        preds = self.predict(df).mean(axis=1)
         plt.hist(preds)
         plt.show()
