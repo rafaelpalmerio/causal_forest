@@ -258,15 +258,14 @@ class CausalForest(object):
         else:
             res = []
             for i in range(n_estimators):
-                res.append(partial_func(i))
-                
+                res.append(partial_func(i))       
         # aggregating the results
         # res is a list of tuples
         model = [x[1] for x in res]
         
         final = reduce(lambda left, right : pd.merge(left, right, on=new_index_cols, how='outer'),
                       [x[0].reset_index() for x in res]).set_index(new_index_cols)
-        
+
         self.model = model
         
         return final
@@ -323,12 +322,12 @@ class CausalForest(object):
             
         # removing w from df, if necessary
         if not self.use_w_in_tree:
-            for col in self.w_var:
-                if col in self.columns:
-                    index_cols += [col]
+            for cl in self.w_var:
+                if cl in self.columns:
+                    index_cols += [cl]
                     
         final_cols = [x for x in self.columns if x not in index_cols and x not in self.y_var]
-    
+
         imp = pd.DataFrame([x.feature_importances_.tolist() for x in self.model]).T
         imp = imp.mean(axis=1).to_frame()
         imp.columns = ['importance']
@@ -337,7 +336,7 @@ class CausalForest(object):
         return imp.sort_values('importance', ascending=False)
     
     
-    def plot_results(self, df):
+    def plot_results(self, df, n_groups=20):
         """
         function that plots the calculated effects vs the real effects in the population;
         ideal curve must be monotonic
@@ -356,6 +355,9 @@ class CausalForest(object):
             # the bin number
             score_group = x['bin'].cat.codes.unique()[0]
             
+            # number of people
+            n_people = x.shape[0]
+            
             # score given by the model
             score = x['prediction'].mean()
             
@@ -369,12 +371,12 @@ class CausalForest(object):
             tau = (x.query("{} == 1".format(self.w_var[0]))[self.y_var[0]].mean() - 
                    x.query("{} == 0".format(self.w_var[0]))[self.y_var[0]].mean() )
             
-            res = pd.DataFrame(data=[[score_group, score, up, down, pr_treatment, tau]], 
-                              columns=['score_group', 'score', 'upper', 'lower', 'pr_treatment', 'tau'])
+            res = pd.DataFrame(data=[[score_group, score, up, down, pr_treatment, tau, n_people]], 
+                              columns=['score_group', 'score', 'upper', 'lower', 'pr_treatment', 'tau', 'group_size'])
             return res
             
         res['prediction'] = self.predict(res)['prediction'].tolist()
-        res['bin'] = pd.qcut(res['prediction'], 20)
+        res['bin'] = pd.qcut(res['prediction'], n_groups)
         resp = res.groupby('bin').apply(aggregator)
         resp['lift'] = resp['tau'] / resp['tau'].mean()
         
@@ -390,12 +392,12 @@ class CausalForest(object):
         plt.grid()
         plt.show()
         
-        return res
+        return resp
         
     def plot_histogram(self, df):
         """
-        function that plots a simple histogram for the effects
+        function that plots a simple histogram fo the effects
         """
         preds = self.predict(df).mean(axis=1)
         plt.hist(preds)
-        plt.show()
+        display()
